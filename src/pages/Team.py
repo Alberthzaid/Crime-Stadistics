@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.set_page_config(page_title="Team", page_icon="assets/LogoWithoutBg.png")
+st.set_page_config(page_title="Team", page_icon="./assets/Logo-removebg.png")
 
 
 st.title("👨‍💻 Conoce nuestro equipo de desarrollo")
@@ -41,11 +41,11 @@ st.markdown(
     """
     <div class="credit-container">
         <div class="credit-text">
-            👨‍💻 Zaid Pantoja - administrador del modelo de machine learning <br><br>
-            🖥️ Miguel - implementacion de deepseek <br><br>
-            📊 Angel Ortega - despliegue del proyecto y Charts de los datasets <br><br>
-            📜 Andres Aviles - mapa de la localidad resaltando su numero de ranking <br><br><br><br><br>
-            ⚡ Derechos reservados - Los Matemonda 2024
+            👨‍💻 Zaid Pantoja - administrador del modelo <br><br>
+            🖥️ Miguel - implementacion de charts <br><br>
+            📊 Angel Ortega - despliegue del proyecto y mapa <br><br>
+            📜 Andres Aviles - diagrama ploting  <br><br><br><br><br>
+            ⚡ Derechos reservados - Los Matemonda 2025
         </div>
     </div>
     """,

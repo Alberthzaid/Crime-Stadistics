@@ -3,7 +3,7 @@ import pandas as pd
 import pydeck as pdk
 from urllib.error import URLError
 
-st.set_page_config(page_title="Mapping Demo", page_icon="🌍")
+st.set_page_config(page_title="Mapping Demo", page_icon="./assets/Logo-removebg.png")
 
 st.markdown("# Mapping Demo")
 st.sidebar.header("Mapping Demo")
