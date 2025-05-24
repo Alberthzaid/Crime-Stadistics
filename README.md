@@ -185,7 +185,7 @@ Licensed under Apache 2.0 — see [LICENSE](/Licence.md).
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/streamlit/streamlit-original.svg" height="40" alt="streamlit logo" />
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pandas/pandas-original.svg" height="40" alt="pandas logo" />
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/numpy/numpy-original.svg" height="40" alt="numpy logo" />
-  <img src="https://plotly.com/assets/images/plotly-logomark.png" height="40" alt="plotly logo" />
+  
   <img src="https://leafletjs.com/docs/images/logo.png" height="40" alt="folium logo" />
 </div>
 
