@@ -14,11 +14,17 @@ st.write(
 
 
 @st.cache_data
-def get_UN_data():
-    AWS_BUCKET_URL = "http://streamlit-demo-data.s3-us-west-2.amazonaws.com"
-    df = pd.read_csv(AWS_BUCKET_URL + "/agri.csv.gz")
-    return df.set_index("Region")
+def get_crime_data():
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    csv_path = os.path.join(base_dir, "Dataset", "test.csv")
 
+    if not os.path.exists(csv_path):
+        st.error("El archivo de datos no se encuentra en la ruta esperada.")
+        return None
+
+    df = pd.read_csv(csv_path)
+    df["Dates"] = pd.to_datetime(df["Dates"])
+    return df
 
 try:
     df = get_UN_data()
