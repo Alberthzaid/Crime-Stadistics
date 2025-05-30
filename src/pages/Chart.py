@@ -24,28 +24,47 @@ def get_crime_data():
     return df
 
 try:
-    df = get_UN_data()
-    countries = st.multiselect(
-        "Choose countries", list(df.index), ["China", "United States of America"]
-    )
-    if not countries:
-        st.error("Please select at least one country.")
-    else:
-        data = df.loc[countries]
-        data /= 1000000.0
-        st.write("### Gross Agricultural Production ($B)", data.sort_index())
+    df = get_crime_data()
 
-        data = data.T.reset_index()
-        data = pd.melt(data, id_vars=["index"]).rename(
-            columns={"index": "year", "value": "Gross Agricultural Product ($B)"}
+    if df is not None:
+
+        district_options = list(df["PdDistrict"].unique())
+        selected_district = st.selectbox("Elige un distrito:", district_options)
+
+        st.sidebar.header("Selecciona el tipo de gráfico")
+        graph_option = st.sidebar.radio(
+            "Elige una vista:",
+            ["Tendencia Temporal (Área)", "Dispersión vs. Fecha", "Comparación por Distrito (Barras)"]
         )
-        chart = (
-            alt.Chart(data)
-            .mark_area(opacity=0.3)
-            .encode(
-                x="year:T",
-                y=alt.Y("Gross Agricultural Product ($B):Q", stack=None),
-                color="Region:N",
+
+        df_filtered = df[df["PdDistrict"] == selected_district]
+
+        st.markdown(f"## Criminalidad en {selected_district}")
+
+        if graph_option == "Tendencia Temporal (Área)":
+            df_area = df_filtered.groupby(df_filtered["Dates"].dt.date).size().reset_index(name="Cantidad de Delitos")
+
+            chart_area = (
+                alt.Chart(df_area)
+                .mark_area(opacity=0.3)
+                .encode(
+                    x="Dates:T",
+                    y="Cantidad de Delitos:Q"
+                )
+            )
+            st.altair_chart(chart_area, use_container_width=True)
+
+        elif graph_option == "Dispersión vs. Fecha":
+            df_scatter = df_filtered.groupby(df_filtered["Dates"].dt.date).size().reset_index(
+                name="Cantidad de Delitos")
+
+            scatter_chart = (
+                alt.Chart(df_scatter)
+                .mark_circle(size=60)
+                .encode(
+                    x="Dates:T",
+                    y="Cantidad de Delitos:Q"
+                )
             )
         )
         st.altair_chart(chart, use_container_width=True)
