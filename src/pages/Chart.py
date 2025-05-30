@@ -66,13 +66,48 @@ try:
                     y="Cantidad de Delitos:Q"
                 )
             )
-        )
-        st.altair_chart(chart, use_container_width=True)
-except URLError as e:
-    st.error(
-        """
-        **This demo requires internet access.**
-        Connection error: %s
+
+            regression_chart = alt.Chart(df_scatter).transform_regression(
+                "Dates", "Cantidad de Delitos"
+            ).mark_line(color="red").encode(
+                x="Dates:T",
+                y="Cantidad de Delitos:Q"
+            ).properties(title="Regresión Lineal")
+
+            st.altair_chart(scatter_chart + regression_chart, use_container_width=True)
+
+            if df_scatter.dropna().shape[0] > 1:
+                correlation = df_scatter.dropna().corr().iloc[0, 1]
+                st.markdown(f"**Coeficiente de correlación entre Fecha y Número de Delitos:** `{correlation:.2f}`")
+            else:
+                st.markdown("**No hay suficientes datos para calcular la correlación.**")
+
+        elif graph_option == "Comparación por Distrito (Barras)":
+            df_bars = df.groupby("PdDistrict").size().reset_index(name="Cantidad de Delitos")
+
+            bar_chart = (
+                alt.Chart(df_bars)
+                .mark_bar()
+                .encode(
+                    x="PdDistrict:N",
+                    y="Cantidad de Delitos:Q",
+                    color="PdDistrict:N"
+                )
+            )
+            st.altair_chart(bar_chart, use_container_width=True)
+
+        st.write("### Datos detallados del distrito seleccionado")
+        st.dataframe(df_filtered)
+
+except Exception as e:
+    st.error(f"Error al cargar los datos: {e}")
+
+st.markdown(
     """
-        % e.reason
-    )
+        <hr style="margin-top: 50px;"/>
+        <div style="text-align: center; color: gray;">
+            <small>By Miguel Rojas</small>
+        </div>
+        """,
+    unsafe_allow_html=True
+)
