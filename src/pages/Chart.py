@@ -1,106 +1,117 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-import os
+from config.db import conn
 
-st.set_page_config(page_title="DataFrame Demo", page_icon="./assets/Logo-removebg.png")
+st.set_page_config(page_title="Crime Index", page_icon="./assets/Logo-removebg.png")
 
-st.markdown("# Índice de Criminalidad")
-
-st.subheader("Selecciona un distrito")
-
+st.markdown("# 🧭 Crime Index")
+st.subheader("Select a district")
 
 @st.cache_data
 def get_crime_data():
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    csv_path = os.path.join(base_dir, "Dataset", "test.csv")
+    try:
+        pipeline = [
+            {
+                "$project": {
+                    "PdDistrict": 1,
+                    "Dates": 1
+                }
+            },
+            {"$limit": 10000}  
+        ]
+        docs = list(conn.aggregate(pipeline))
+        df = pd.DataFrame(docs)
 
-    if not os.path.exists(csv_path):
-        st.error("El archivo de datos no se encuentra en la ruta esperada.")
+        if df.empty:
+            return None
+
+        df["Dates"] = pd.to_datetime(df["Dates"], errors='coerce')
+        df = df.dropna(subset=["Dates", "PdDistrict"])
+        return df
+
+    except Exception as e:
+        st.error(f"Error loading data from MongoDB: {str(e)}")
         return None
-
-    df = pd.read_csv(csv_path)
-    df["Dates"] = pd.to_datetime(df["Dates"])
-    return df
 
 try:
     df = get_crime_data()
 
     if df is not None:
+        district_options = sorted(df["PdDistrict"].dropna().unique())
+        selected_district = st.selectbox("Choose a district:", district_options)
 
-        district_options = list(df["PdDistrict"].unique())
-        selected_district = st.selectbox("Elige un distrito:", district_options)
-
-        st.sidebar.header("Selecciona el tipo de gráfico")
+        st.sidebar.header("Select chart type")
         graph_option = st.sidebar.radio(
-            "Elige una vista:",
-            ["Tendencia Temporal (Área)", "Dispersión vs. Fecha", "Comparación por Distrito (Barras)"]
+            "Choose a view:",
+            ["Time Trend (Area)", "Scatter vs. Date", "District Comparison (Bars)"]
         )
 
         df_filtered = df[df["PdDistrict"] == selected_district]
 
-        st.markdown(f"## Criminalidad en {selected_district}")
+        st.markdown(f"## Crime in {selected_district}")
 
-        if graph_option == "Tendencia Temporal (Área)":
-            df_area = df_filtered.groupby(df_filtered["Dates"].dt.date).size().reset_index(name="Cantidad de Delitos")
+        if graph_option == "Time Trend (Area)":
+            df_area = df_filtered.groupby(df_filtered["Dates"].dt.date).size().reset_index(name="Crime Count")
 
             chart_area = (
                 alt.Chart(df_area)
                 .mark_area(opacity=0.3)
                 .encode(
                     x="Dates:T",
-                    y="Cantidad de Delitos:Q"
+                    y="Crime Count:Q"
                 )
             )
             st.altair_chart(chart_area, use_container_width=True)
 
-        elif graph_option == "Dispersión vs. Fecha":
+        elif graph_option == "Scatter vs. Date":
             df_scatter = df_filtered.groupby(df_filtered["Dates"].dt.date).size().reset_index(
-                name="Cantidad de Delitos")
+                name="Crime Count"
+            )
 
             scatter_chart = (
                 alt.Chart(df_scatter)
                 .mark_circle(size=60)
                 .encode(
                     x="Dates:T",
-                    y="Cantidad de Delitos:Q"
+                    y="Crime Count:Q"
                 )
             )
 
             regression_chart = alt.Chart(df_scatter).transform_regression(
-                "Dates", "Cantidad de Delitos"
+                "Dates", "Crime Count"
             ).mark_line(color="red").encode(
                 x="Dates:T",
-                y="Cantidad de Delitos:Q"
-            ).properties(title="Regresión Lineal")
+                y="Crime Count:Q"
+            ).properties(title="Linear Regression")
 
             st.altair_chart(scatter_chart + regression_chart, use_container_width=True)
 
             if df_scatter.dropna().shape[0] > 1:
                 correlation = df_scatter.dropna().corr().iloc[0, 1]
-                st.markdown(f"**Coeficiente de correlación entre Fecha y Número de Delitos:** `{correlation:.2f}`")
+                st.markdown(f"**Correlation coefficient between Date and Crime Count:** `{correlation:.2f}`")
             else:
-                st.markdown("**No hay suficientes datos para calcular la correlación.**")
+                st.markdown("**Not enough data to calculate correlation.**")
 
-        elif graph_option == "Comparación por Distrito (Barras)":
-            df_bars = df.groupby("PdDistrict").size().reset_index(name="Cantidad de Delitos")
+        elif graph_option == "District Comparison (Bars)":
+            df_bars = df.groupby("PdDistrict").size().reset_index(name="Crime Count")
 
             bar_chart = (
                 alt.Chart(df_bars)
                 .mark_bar()
                 .encode(
                     x="PdDistrict:N",
-                    y="Cantidad de Delitos:Q",
+                    y="Crime Count:Q",
                     color="PdDistrict:N"
                 )
             )
             st.altair_chart(bar_chart, use_container_width=True)
 
-        st.write("### Datos detallados del distrito seleccionado")
-        st.dataframe(df_filtered)
+        st.write("### Detailed data for selected district")
+        st.dataframe(df_filtered.head(50))
 
 except Exception as e:
-    st.error(f"Error al cargar los datos: {e}")
+    st.error(f"Error loading data: {e}")
 
 st.markdown(
     """
